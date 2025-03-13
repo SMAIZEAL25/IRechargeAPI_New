@@ -1,4 +1,5 @@
 ﻿using IRecharge_API.BLL;
+using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace IRecharge_API.Controllers
     public class PurchaseController : ControllerBase
     {
         private readonly IPurchaseService _purchaseService;
+        private readonly TokenService _tokenService;
 
-        public PurchaseController(IPurchaseService purchaseService)
+        public PurchaseController(IPurchaseService purchaseService,   TokenService tokenService)
         {
             this._purchaseService = purchaseService;
+            this._tokenService = tokenService;
         }
 
 
@@ -32,6 +35,14 @@ namespace IRecharge_API.Controllers
             var response = _purchaseService.PurchaseAirtime(purchaseAirtimeRequestDTO, username);
             
             return Ok(response);
+        }
+
+        [HttpGet("Get/token")]
+
+        public async Task <IActionResult> GetToken()
+        {
+            var tokem = await _tokenService.GetTokenAsync();
+            return Ok("Token");
         }
 
     }

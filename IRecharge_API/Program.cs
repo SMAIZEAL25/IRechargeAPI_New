@@ -1,7 +1,9 @@
 using IRecharge_API.BLL;
+using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DAL;
 using IRecharge_API.ExternalServices;
 using Microsoft.EntityFrameworkCore;
+using System.Xml;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,11 @@ builder.Services.AddHttpClient("DigitalVendorsUrl", client => {
 builder.Services.AddTransient<IPurchaseService, PurchaseService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IDigitalVendors, DigitalVendorsAPI>();
+
+builder.Services.AddSingleton<ICacheservice, MemoryCacheService>();
+builder.Services.AddTransient<TokenService>();
+builder.Services.AddMemoryCache();
+
 
 var app = builder.Build();
 
