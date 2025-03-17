@@ -23,19 +23,13 @@ namespace IRecharge_API.Controllers
         [HttpPost("purchase-airtime")]
         public IActionResult PurchaseAirtimeEndpoint ([FromBody] PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO)
         {
-            // Extract the token from the request headers
-            //if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
-            //{
-            //    return Unauthorized("Authorization header is missing");
-            //}
-
-            //var token = authHeader.ToString().Replace("Bearer ", ""); // Remove "Bearer " prefix
-            /*var username = HttpContext.User.Identity.Name*/
             var username = "JamesSamuel";
             var response = _purchaseService.PurchaseAirtime(purchaseAirtimeRequestDTO, username);
             
             return Ok(response);
         }
+
+
 
         [HttpGet("Get/token")]
 
@@ -47,3 +41,13 @@ namespace IRecharge_API.Controllers
 
     }
 }
+
+
+// Extract the token from the request headers
+//if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
+//{
+//    return Unauthorized("Authorization header is missing");
+//}
+
+//var token = authHeader.ToString().Replace("Bearer ", ""); // Remove "Bearer " prefix
+/*var username = HttpContext.User.Identity.Name*/
