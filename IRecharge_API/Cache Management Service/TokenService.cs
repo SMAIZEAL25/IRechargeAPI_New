@@ -24,8 +24,8 @@ namespace IRecharge_API.Cache_Management_Service
             var loginEndpoint = _configuration["ExternalAPI:LoginEndpoint"];
             var credentials = new
             {
-                Username = _configuration["ExternalAPI:username"],
-                Password = _configuration["ExternalAPI:password"]
+                username = _configuration["ExternalAPI:username"],
+                password = _configuration["ExternalAPI:password"]
             };
 
             var content = new StringContent(JsonSerializer.Serialize(credentials), System.Text.Encoding.UTF8, "application/json");
