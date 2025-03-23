@@ -27,7 +27,7 @@ namespace IRecharge_API.Cache_Management_Service
                 username = _configuration["ExternalAPI:username"],
                 password = _configuration["ExternalAPI:password"]
             };
-
+            var request = new { username = credentials.username, password = credentials.password };
             var content = new StringContent(JsonSerializer.Serialize(credentials), System.Text.Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(loginEndpoint, content);
 
@@ -35,9 +35,10 @@ namespace IRecharge_API.Cache_Management_Service
 
             var responseData = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseData);
+            var expiration = TimeSpan.FromMinutes(tokenResponse.ExpiresInMinutes);
 
             // Cache the token
-            await _cacheService.SetAsync(CacheKey, tokenResponse.Token, TimeSpan.FromMinutes(tokenResponse.ExpiresInMinutes));
+            await _cacheService.SetAsync(CacheKey, tokenResponse.Token,expiration);
 
             return tokenResponse.Token;
         }
@@ -54,6 +55,16 @@ namespace IRecharge_API.Cache_Management_Service
 
             // Fetch new token if cache is empty
             return await FetchTokenFromExternalApiAsync();
+        }
+
+        public async Task SetTokenAsync (string token, int expiresInMinutes)
+        {
+            if (expiresInMinutes <= 86400)
+            {
+                 throw new ArgumentOutOfRangeException(nameof(expiresInMinutes),"Expiration time must be a positive value.");
+            }
+
+            await _cacheService.SetAsync(CacheKey, token, TimeSpan.FromMinutes(expiresInMinutes));
         }
 
         private class TokenResponse
