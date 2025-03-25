@@ -1,9 +1,10 @@
-﻿using IRecharge_API.Cache_Management_Service;
+﻿
+using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DAL;
 using IRecharge_API.DTO;
 using IRecharge_API.ExternalServices;
 using IRecharge_API.ExternalServices.Models;
-
+using System.Net.Http.Headers;
 
 namespace IRecharge_API.BLL
 {
@@ -13,22 +14,29 @@ namespace IRecharge_API.BLL
         private readonly IDigitalVendors _digitalVendors;
         private readonly TokenService _tokenService;
         private readonly ILogger<PurchaseService> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
         public PurchaseService(
             IUserRepository userRepository,
             IDigitalVendors digitalVendors,
             TokenService tokenService,
-            ILogger<PurchaseService> logger)
+            ILogger<PurchaseService> logger,
+            HttpClient httpClient,
+            IConfiguration configuration)
         {
             _userRepository = userRepository;
             _digitalVendors = digitalVendors;
             _tokenService = tokenService;
             _logger = logger;
+            _httpClient = httpClient;
+            _configuration = configuration;
         }
 
-        public async Task<ResponseModel> PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
-                string username,
-                string token)  // Add token parameter
+        public async Task<ResponseModel> PurchaseAirtime(
+            PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
+            string username,
+            string token)
         {
             try
             {
@@ -42,7 +50,7 @@ namespace IRecharge_API.BLL
                 }
 
                 // Validate user
-                var user =  _userRepository.GetByUserName(username);
+                var user = _userRepository.GetByUserName(username);
                 if (user == null)
                 {
                     _logger.LogWarning($"User not found: {username}");
@@ -62,6 +70,7 @@ namespace IRecharge_API.BLL
                 _logger.LogDebug($"Deducted {purchaseAirtimeRequestDTO.Amount} from user {username}'s wallet");
 
                 // Prepare vendor request
+                _logger.LogInformation($"Preparing airtime purchase request for user: {username}");
                 var vendAirtimeRequest = new VendAirtimeRequestModel
                 {
                     amount = purchaseAirtimeRequestDTO.Amount,
@@ -69,22 +78,31 @@ namespace IRecharge_API.BLL
                     network = purchaseAirtimeRequestDTO.NetworkType
                 };
 
-                // Process airtime purchase using the token from controller
-                var result = await _digitalVendors.VendAirtime(vendAirtimeRequest, token);
+                // Add Authorization header to the request
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
 
-                if (result == null)
+                // Make the API call
+                var response = await _httpClient.PostAsJsonAsync(
+                    _configuration["VendorAPI:AirtimeEndpoint"],
+                    vendAirtimeRequest);
+
+                if (!response.IsSuccessStatusCode)
                 {
                     // Refund if failed
                     user.WalletBalance += purchaseAirtimeRequestDTO.Amount;
-                    _userRepository.UpdateUserAsync(user);
-                    _logger.LogError($"Airtime purchase failed for user: {username}");
+                     _userRepository.UpdateUserAsync(user);
+                    _logger.LogError($"Airtime purchase failed for user: {username}. Status: {response.StatusCode}");
 
                     return new ResponseModel
                     {
                         IsSuccess = false,
-                        Message = "Failed to purchase airtime"
+                        Message = $"Failed to purchase airtime. Status: {response.StatusCode}"
                     };
                 }
+
+                // Process successful response
+                var result = await response.Content.ReadFromJsonAsync<ResponseModel>();
 
                 _logger.LogInformation($"Airtime purchase successful for user: {username}");
                 return new ResponseModel
@@ -105,9 +123,8 @@ namespace IRecharge_API.BLL
             }
         }
 
-        public async Task <ResponseModel>  PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO)
+        public async Task<ResponseModel> PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO)
         {
-            // Similar implementation pattern as PurchaseAirtimeAsync
             throw new NotImplementedException();
         }
     }

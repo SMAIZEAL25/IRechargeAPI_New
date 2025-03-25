@@ -26,71 +26,112 @@ namespace IRecharge_API.Cache_Management_Service
         }
 
         // Private method to fetch token from external API
-        private async Task<string> FetchTokenFromExternalApiAsync()
-        {
-            try
-            {
-                var loginEndpoint = _configuration["ExternalAPI:LoginEndpoint"];
-                var credentials = new
-                {
-                    username = _configuration["ExternalAPI:username"],
-                    password = _configuration["ExternalAPI:password"]
-                };
+        //private async Task<string> FetchTokenFromExternalApiAsync()
+        //{
+        //    try
+        //    {
+        //        var loginEndpoint = _configuration["ExternalAPI:LoginEndpoint"];
+        //        var credentials = new
+        //        {
+        //            username = _configuration["ExternalAPI:username"],
+        //            password = _configuration["ExternalAPI:password"]
+        //        };
 
-                var content = new StringContent(
-                    JsonSerializer.Serialize(credentials),
-                    Encoding.UTF8,
-                    "application/json");
+        //        var content = new StringContent(
+        //            JsonSerializer.Serialize(credentials),
+        //            Encoding.UTF8,
+        //            "application/json");
 
-                var response = await _httpClient.PostAsync(loginEndpoint, content);
-                response.EnsureSuccessStatusCode();
+        //        var response = await _httpClient.PostAsync(loginEndpoint, content);
+        //        response.EnsureSuccessStatusCode();
 
-                var responseData = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseData);
+        //        var responseData = await response.Content.ReadAsStringAsync();
+        //        var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseData);
 
-                // Validate expiration time
-                if (tokenResponse.ExpiresInMinutes <= 0)
-                {
-                    _logger.LogWarning(
-                        "Invalid expiration time {ExpiresInMinutes} received from API. Using default 30 minutes.",
-                        tokenResponse.ExpiresInMinutes);
-                    tokenResponse.ExpiresInMinutes = 8461; // Default fallback
-                }
+        //        // Validate expiration time
+        //        if (tokenResponse.ExpiresInMinutes <= 1)
+        //        {
+        //            _logger.LogWarning(
+        //                "Invalid expiration time {ExpiresInMinutes} received from API. Using default 30 minutes.",
+        //                tokenResponse.ExpiresInMinutes);
+        //                tokenResponse.ExpiresInMinutes = 86400; // Default fallback
+        //        }
 
-                // Cache the token
-                var success = await SetTokenAsync(tokenResponse.Token, tokenResponse.ExpiresInMinutes);
-                if (!success)
-                {
-                    _logger.LogError("Failed to cache the token");
-                }
+        //        // Cache the token
+        //        var success = await SetTokenAsync(tokenResponse.Token, tokenResponse.ExpiresInMinutes);
+        //        if (!success)
+        //        {
+        //            _logger.LogError("Failed to cache the token");
+        //        }
 
-                return tokenResponse.Token;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching token from external API");
-                throw;
-            }
-        }
+        //        return tokenResponse.Token;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error fetching token from external API");
+        //        throw;
+        //    }
+        //}
 
         // Public method to get token
-        public async Task<string> GetTokenAsync()
+
+        private async Task<string> FetchTokenFromExternalApiAsync()
+        {
+            var loginEndpoint = _configuration["ExternalAPI:LoginEndpoint"];
+            var credentials = new
+            {
+                username = _configuration["ExternalAPI:username"],
+                password = _configuration["ExternalAPI:password"]
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(credentials),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync(loginEndpoint, content);
+            response.EnsureSuccessStatusCode();
+
+            var responseData = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseData);
+
+            if (string.IsNullOrEmpty(tokenResponse?.Token))
+            {
+                throw new ApplicationException("Invalid token response from API");
+            }
+
+            // Cache the token
+            await _cacheService.SetAsync(
+                CacheKey,
+                tokenResponse.Token,
+                TimeSpan.FromMinutes(tokenResponse.ExpiresInMinutes));
+
+            return tokenResponse.Token;
+        }
+
+        public async Task<string> GetApiTokenAsync()
         {
             try
             {
-                // Check cache for token
                 var cachedToken = await _cacheService.GetAsync<string>(CacheKey);
                 if (!string.IsNullOrEmpty(cachedToken))
                 {
                     return cachedToken;
                 }
 
-                // Fetch new token if cache is empty
-                return await FetchTokenFromExternalApiAsync();
+                var token = await FetchTokenFromExternalApiAsync();
+                if (string.IsNullOrEmpty(token))
+                {
+                    throw new ApplicationException("Received empty token from external API");
+                }
+
+                await _cacheService.SetAsync(CacheKey, token, TimeSpan.FromMinutes(_configuration.GetValue<int>("ExternalAPI:ExpiresInMinutes")));
+
+                return token;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting token");
+                _logger.LogError(ex, "Failed to get API token");
                 throw;
             }
         }
@@ -121,11 +162,6 @@ namespace IRecharge_API.Cache_Management_Service
         }
 
 
-        // Tpken Response Class 
-        private class TokenResponse
-        {
-            public string Token { get; set; }
-            public int ExpiresInMinutes { get; set; }
-        }
+      
     }
 }
