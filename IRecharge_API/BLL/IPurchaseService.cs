@@ -4,7 +4,8 @@ namespace IRecharge_API.BLL
 {
     public interface IPurchaseService
     {
-        Task<ResponseModel> PurchaseAirtime (PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username);
+        Task<ResponseModel> PurchaseAirtime (PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username, string token);
+      
         Task<ResponseModel> PurchaseData (PurchaseDataRequestDTO purchaseDataRequestDTO);
     }
 }

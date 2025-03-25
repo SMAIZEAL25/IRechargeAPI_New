@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Net.Http;
+﻿
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+
 
 namespace IRecharge_API.Cache_Management_Service
 {
@@ -56,7 +54,7 @@ namespace IRecharge_API.Cache_Management_Service
                     _logger.LogWarning(
                         "Invalid expiration time {ExpiresInMinutes} received from API. Using default 30 minutes.",
                         tokenResponse.ExpiresInMinutes);
-                    tokenResponse.ExpiresInMinutes = 30; // Default fallback
+                    tokenResponse.ExpiresInMinutes = 8461; // Default fallback
                 }
 
                 // Cache the token
@@ -122,6 +120,8 @@ namespace IRecharge_API.Cache_Management_Service
             }
         }
 
+
+        // Tpken Response Class 
         private class TokenResponse
         {
             public string Token { get; set; }

@@ -26,7 +26,9 @@ namespace IRecharge_API.BLL
             _logger = logger;
         }
 
-        public async Task  <ResponseModel> PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username)
+        public async Task<ResponseModel> PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
+                string username,
+                string token)  // Add token parameter
         {
             try
             {
@@ -40,7 +42,7 @@ namespace IRecharge_API.BLL
                 }
 
                 // Validate user
-                var user = _userRepository.GetByUserName(username);
+                var user =  _userRepository.GetByUserName(username);
                 if (user == null)
                 {
                     _logger.LogWarning($"User not found: {username}");
@@ -56,7 +58,7 @@ namespace IRecharge_API.BLL
 
                 // Deduct balance
                 user.WalletBalance -= purchaseAirtimeRequestDTO.Amount;
-                _userRepository.UpdateUserAsync(user);
+                 _userRepository.UpdateUserAsync(user);
                 _logger.LogDebug($"Deducted {purchaseAirtimeRequestDTO.Amount} from user {username}'s wallet");
 
                 // Prepare vendor request
@@ -67,18 +69,14 @@ namespace IRecharge_API.BLL
                     network = purchaseAirtimeRequestDTO.NetworkType
                 };
 
-                // Get token asynchronously
-                var token = await _tokenService.GetTokenAsync();
-                _logger.LogDebug("Retrieved access token");
-
-                // Process airtime purchase
+                // Process airtime purchase using the token from controller
                 var result = await _digitalVendors.VendAirtime(vendAirtimeRequest, token);
 
                 if (result == null)
                 {
                     // Refund if failed
                     user.WalletBalance += purchaseAirtimeRequestDTO.Amount;
-                     _userRepository.UpdateUserAsync(user);
+                    _userRepository.UpdateUserAsync(user);
                     _logger.LogError($"Airtime purchase failed for user: {username}");
 
                     return new ResponseModel
@@ -93,7 +91,7 @@ namespace IRecharge_API.BLL
                 {
                     IsSuccess = true,
                     Message = "Airtime purchased successfully",
-                    Data = result // Include the vendor response if available
+                    Data = result
                 };
             }
             catch (Exception ex)

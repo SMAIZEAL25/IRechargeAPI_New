@@ -2,7 +2,7 @@
 using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DTO;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+
 
 namespace IRecharge_API.Controllers
 {
@@ -26,8 +26,8 @@ namespace IRecharge_API.Controllers
 
         [HttpPost("purchase-airtime")]
         public async Task<IActionResult> PurchaseAirtime(
-            [FromBody] PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
-            [FromHeader(Name = "Authorization")] string token)
+                [FromBody] PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
+                [FromHeader(Name = "Authorization")] string token)
         {
             try
             {
@@ -39,12 +39,16 @@ namespace IRecharge_API.Controllers
                     return Unauthorized("Invalid or expired token");
                 }
 
-                // Get username from authenticated user (better approach)
+                // Get username from authenticated user
                 var username = User.Identity?.Name ?? "JamesSamuel"; // Fallback for testing
 
                 _logger.LogInformation($"Processing airtime purchase for user: {username}");
 
-                var response = await _purchaseService.PurchaseAirtime(purchaseAirtimeRequestDTO, username);
+                // Pass the validated token to the service
+                var response = await _purchaseService.PurchaseAirtime(
+                    purchaseAirtimeRequestDTO,
+                    username,
+                    token);  // Pass the token here
 
                 _logger.LogInformation($"Airtime purchase successful for user: {username}");
                 return Ok(response);
