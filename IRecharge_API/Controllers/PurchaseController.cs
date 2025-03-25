@@ -44,7 +44,7 @@ namespace IRecharge_API.Controllers
 
                 _logger.LogInformation($"Processing airtime purchase for user: {username}");
 
-                var response = _purchaseService.PurchaseAirtime(purchaseAirtimeRequestDTO, username);
+                var response = await _purchaseService.PurchaseAirtime(purchaseAirtimeRequestDTO, username);
 
                 _logger.LogInformation($"Airtime purchase successful for user: {username}");
                 return Ok(response);
@@ -75,11 +75,3 @@ namespace IRecharge_API.Controllers
 }
 
 
-// Extract the token from the request headers
-//if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
-//{
-//    return Unauthorized("Authorization header is missing");
-//}
-
-//var token = authHeader.ToString().Replace("Bearer ", ""); // Remove "Bearer " prefix
-/*var username = HttpContext.User.Identity.Name*/

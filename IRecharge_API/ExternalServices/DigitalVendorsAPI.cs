@@ -16,7 +16,7 @@ namespace IRecharge_API.ExternalServices
             this._httpClient = httpClient;
         }
 
-        public DigitalVendorsReponseModel VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token)
+        public async Task <DigitalVendorsReponseModel> VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token)
         {
             var baseurl = _configuration.GetSection("DigitalVendorsAPI:BaseURL").Value;
             if (string.IsNullOrEmpty(baseurl))

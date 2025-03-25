@@ -3,8 +3,7 @@ using IRecharge_API.DAL;
 using IRecharge_API.DTO;
 using IRecharge_API.ExternalServices;
 using IRecharge_API.ExternalServices.Models;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
+
 
 namespace IRecharge_API.BLL
 {
@@ -27,7 +26,7 @@ namespace IRecharge_API.BLL
             _logger = logger;
         }
 
-        public ResponseModel PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username)
+        public async Task  <ResponseModel> PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username)
         {
             try
             {
@@ -73,7 +72,7 @@ namespace IRecharge_API.BLL
                 _logger.LogDebug("Retrieved access token");
 
                 // Process airtime purchase
-                var result = _digitalVendors.VendAirtime(vendAirtimeRequest, token);
+                var result = await _digitalVendors.VendAirtime(vendAirtimeRequest, token);
 
                 if (result == null)
                 {
@@ -108,7 +107,7 @@ namespace IRecharge_API.BLL
             }
         }
 
-        public ResponseModel  PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO)
+        public async Task <ResponseModel>  PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO)
         {
             // Similar implementation pattern as PurchaseAirtimeAsync
             throw new NotImplementedException();

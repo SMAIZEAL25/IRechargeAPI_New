@@ -4,6 +4,6 @@ namespace IRecharge_API.ExternalServices
 {
     public interface IDigitalVendors
     {
-        DigitalVendorsReponseModel VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token);
+        Task <DigitalVendorsReponseModel> VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token);
     }
 }
