@@ -25,7 +25,7 @@ namespace IRecharge_API.DAL
             return _context.Users.FirstOrDefault(u => u.PhoneNumber == phoneNumber);
         }
 
-        public void UpdateUser(User user)
+        public void UpdateUserAsync(User user)
         {
             var updateUserRecord = _context.Users.Update(user);
         }

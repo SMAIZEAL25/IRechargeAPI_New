@@ -6,7 +6,7 @@ namespace IRecharge_API.DAL
     {
         User GetUserByPhoneNumber(string phoneNumber);
 
-        void UpdateUser(User user);
+        void UpdateUserAsync(User user);
 
         User GetUserById(Guid id);
 

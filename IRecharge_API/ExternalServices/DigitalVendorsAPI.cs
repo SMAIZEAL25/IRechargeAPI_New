@@ -16,9 +16,8 @@ namespace IRecharge_API.ExternalServices
             this._httpClient = httpClient;
         }
 
-        //public DigitalVendorsReponseModel VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token) 
-            public DigitalVendorsReponseModel VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel)
-            {
+        public DigitalVendorsReponseModel VendAirtime(VendAirtimeRequestModel vendAirtimeRequestModel, string token)
+        {
             var baseurl = _configuration.GetSection("DigitalVendorsAPI:BaseURL").Value;
             if (string.IsNullOrEmpty(baseurl))
             {
@@ -28,8 +27,7 @@ namespace IRecharge_API.ExternalServices
             var jsonContent = JsonSerializer.Serialize(vendAirtimeRequestModel);
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            //var token = _tokenservice.Gettoken();
-            //_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             var response = _httpClient.PostAsync(baseurl, httpContent).Result;
 

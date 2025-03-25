@@ -6,6 +6,6 @@ namespace IRecharge_API.BLL
     {
         ResponseModel PurchaseAirtime(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO, string username);
        
-         ResponseModel PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO);
+        ResponseModel PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO);
     }
 }
