@@ -2,11 +2,13 @@
 {
     public class DigitalVendorsReponseModel
     {
-        public bool  IsSuccessful { get; set; }
+        public bool  isSuccessful { get; set; }
 
         public  string  tran_Id { get; set; }
 
         public  string  responsemessage { get; set; }
+
+        public string id { get; set; }
 
 
     }
