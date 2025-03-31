@@ -2,6 +2,7 @@ using IRecharge_API.BLL;
 using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DAL;
 using IRecharge_API.ExternalServices;
+using IRecharge_API.ExternalServices.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
 
@@ -41,7 +42,8 @@ builder.Services.AddTransient<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IDigitalVendors, DigitalVendorsAPI>();
 
 builder.Services.AddSingleton<ICacheservice, MemoryCacheService>();
-builder.Services.AddTransient<TokenService>();
+builder.Services.AddScoped<AirtimeService>();
+builder.Services.AddSingleton<TokenServices>();
 builder.Services.AddMemoryCache();
 
 

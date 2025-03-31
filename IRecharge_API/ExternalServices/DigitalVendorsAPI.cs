@@ -39,7 +39,7 @@ namespace IRecharge_API.ExternalServices
                 return new DigitalVendorsReponseModel
                 {
                     responsemessage = "Failed to purchase airtime",
-                    IsSuccessful = false
+                    isSuccessful = false
                 };
             }
 

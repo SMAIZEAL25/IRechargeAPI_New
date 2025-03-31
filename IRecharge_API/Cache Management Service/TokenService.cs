@@ -6,19 +6,19 @@ using System.Text.Json;
 
 namespace IRecharge_API.Cache_Management_Service
 {
-    public class TokenService
+    public class tokenService
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ICacheservice _cacheService;
-        private readonly ILogger<TokenService> _logger;
+        private readonly ILogger<tokenService> _logger;
         private const string CacheKey = "AccessToken";
 
-        public TokenService(
+        public tokenService(
             HttpClient httpClient,
             IConfiguration configuration,
             ICacheservice cacheService,
-            ILogger<TokenService> logger)
+            ILogger<tokenService> logger)
         {
             _httpClient = httpClient;
             _configuration = configuration;

@@ -12,7 +12,6 @@ namespace IRecharge_API.BLL
     {
         private readonly IUserRepository _userRepository;
         private readonly IDigitalVendors _digitalVendors;
-        private readonly TokenService _tokenService;
         private readonly ILogger<PurchaseService> _logger;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
@@ -20,14 +19,12 @@ namespace IRecharge_API.BLL
         public PurchaseService(
             IUserRepository userRepository,
             IDigitalVendors digitalVendors,
-            TokenService tokenService,
             ILogger<PurchaseService> logger,
             HttpClient httpClient,
             IConfiguration configuration)
         {
             _userRepository = userRepository;
             _digitalVendors = digitalVendors;
-            _tokenService = tokenService;
             _logger = logger;
             _httpClient = httpClient;
             _configuration = configuration;

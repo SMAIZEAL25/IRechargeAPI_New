@@ -2,11 +2,13 @@
 using IRecharge_API.Cache_Management_Service;
 using IRecharge_API.DTO;
 using IRecharge_API.Entities;
+using IRecharge_API.ExternalServices;
 using IRecharge_API.ExternalServices.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Text;
 
 
 namespace IRecharge_API.Controllers
@@ -16,13 +18,13 @@ namespace IRecharge_API.Controllers
     public class PurchaseController : ControllerBase
     {
         private readonly IPurchaseService _purchaseService;
-        private readonly TokenService _tokenService;
+        private readonly TokenServices _tokenService;
         private readonly ILogger<PurchaseController> _logger;
         private readonly IConfiguration _configuration;
 
         public PurchaseController(
             IPurchaseService purchaseService,
-            TokenService tokenService,
+            TokenServices tokenService,
             ILogger<PurchaseController> logger, IConfiguration configuration)
         {
             _purchaseService = purchaseService;
@@ -68,29 +70,43 @@ namespace IRecharge_API.Controllers
         //}
 
         [HttpPost("purchase-airtime")]
-        public async Task<IActionResult> PurchaseAirtime(VendAirtimeRequestModel vendAirtimeRequestModel)
-        //[FromBody] PurchaseAirtimeRequestDTO request,
-        //[FromHeader(Name = "Authorization")] string authHeader)
+        public async Task<DigitalVendorsReponseModel> PurchaseAirtime(VendAirtimeRequestModel vendAirtimeRequestModel)
+  
         {
+            var responseModel = new DigitalVendorsReponseModel();
             try
             {
 
                 var client = new HttpClient();
                 var request1 = new HttpRequestMessage(HttpMethod.Post, "https://api3.digitalvendorz.com/api/airtime");
                 //request1.Headers.Add("Auth", "10|hKOM1xo4wtRorExk14vIQA9jN6o00CHJOgo3YAAe");
-                request1.Headers.Add("Auth", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpMy5kaWdpdGFsdmVuZG9yei5jb21cL2FwaVwvYXV0aFwvbG9naW4iLCJpYXQiOjE3NDM0NTE4NjgsImV4cCI6MTc0MzUzODI2OCwibmJmIjoxNzQzNDUxODY4LCJqdGkiOiIzdWVnS2xsenJHcHV1b1lMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.qE-MH44SRV-kbKgxu7SihnrhY0XeHYfm5f6lobNYIWw");
-                var content = new StringContent("{\r\n    \"number\":\"09065135368\",\r\n    \"network\":\"MTN\",\r\n    \"amount\":\"10\"\r\n}", null, "application/json");
-                request1.Content = content;
+                request1.Headers.Add("Auth", "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvYXBpMy5kaWdpdGFsdmVuZG9yei5jb21cL2FwaVwvYXV0aFwvbG9naW4iLCJpYXQiOjE3NDM0NTU4NjQsImV4cCI6MTc0MzU0MjI2NCwibmJmIjoxNzQzNDU1ODY0LCJqdGkiOiJGa2t0QlpBSFRydjYycTdKIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.-UnOg48krCB1ovTzUcNGwhFHW-To2C6zX6ctyT_nxa8");
+                //var content = new StringContent("{\r\n    \"number\":\"09065135368\",\r\n    \"network\":\"MTN\",\r\n    \"amount\":\"10\"\r\n}", null, "application/json");
+                var jsonContent = JsonConvert.SerializeObject(vendAirtimeRequestModel);
+                var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+   
                 var response = await client.SendAsync(request1);
-                //response.EnsureSuccessStatusCode();
                 var Jsonresponse = await response.Content.ReadAsStringAsync();
-                return Ok(Jsonresponse);
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+                if (contentType == "text/html")
+                {
+                    responseModel.isSuccessful = false;
+                    responseModel.responsemessage = "Authentication failed - possibly expired token";
+
+                    return responseModel; 
+                }
+
+                var apiResponse = JsonConvert.DeserializeObject<DigitalVendorsReponseModel>(contentType);
+
+                return apiResponse;
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Purchase failed");
-                return StatusCode(500, new { Error = "Processing error" });
+                responseModel.isSuccessful = false;
+                responseModel.responsemessage = "Processing error";
+                return responseModel;
             }
         }
 
