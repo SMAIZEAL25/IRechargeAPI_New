@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace IRecharge_API.ExternalServices.Models
 {
@@ -40,7 +41,7 @@ namespace IRecharge_API.ExternalServices.Models
                     HttpMethod.Post,
                     "https://api3.digitalvendorz.com/api/airtime");
 
-                request.Headers.Add("Auth", authToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue ("Bearer", authToken);
                 request.Content = new StringContent(
                     JsonConvert.SerializeObject(requestModel),
                     Encoding.UTF8,

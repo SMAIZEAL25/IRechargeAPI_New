@@ -1,4 +1,5 @@
-﻿using IRecharge_API.Cache_Management_Service;
+﻿
+using IRecharge_API.Entities;
 using Newtonsoft.Json;
 
 namespace IRecharge_API.ExternalServices
@@ -39,10 +40,10 @@ namespace IRecharge_API.ExternalServices
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(content);
+                    var tokenResponse = JsonConvert.DeserializeObject<TokenResponses>(content);
 
-                    _cachedToken = tokenResponse?.Token;
-                    _tokenExpiry = DateTime.UtcNow.AddSeconds(tokenResponse?.ExpiresInMinutes ?? 86400);
+                    _cachedToken = tokenResponse?.token;
+                    _tokenExpiry = DateTime.UtcNow.AddMinutes(tokenResponse?.token_validity ?? 86400);
 
                     return _cachedToken;
                 }
