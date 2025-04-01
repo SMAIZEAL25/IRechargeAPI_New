@@ -1,8 +1,7 @@
-﻿
-using IRecharge_API.Entities;
+﻿using IRecharge_API.Entities;
 using Newtonsoft.Json;
 
-namespace IRecharge_API.ExternalServices
+namespace IRecharge_API.BLL
 {
     public class TokenServices
     {
@@ -57,5 +56,5 @@ namespace IRecharge_API.ExternalServices
         }
     }
 
- 
+
 }

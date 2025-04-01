@@ -1,7 +1,6 @@
 using IRecharge_API.BLL;
 using IRecharge_API.DAL;
 using IRecharge_API.ExternalServices;
-using IRecharge_API.ExternalServices.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
 
