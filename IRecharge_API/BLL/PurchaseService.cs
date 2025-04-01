@@ -23,9 +23,7 @@ namespace IRecharge_API.BLL
             _logger = logger;
         }
 
-        public async Task<ResponseModel> PurchaseAirtimeService(
-            PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
-            string username)
+        public async Task<ResponseModel> PurchaseAirtimeService(PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,string username)
         {
             try
             {
