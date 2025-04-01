@@ -10,29 +10,22 @@ namespace IRecharge_API.BLL
     public class PurchaseService : IPurchaseService
     {
         private readonly IUserRepository _userRepository;
-        private readonly IDigitalVendors _digitalVendors;
+        private readonly AirtimeService _airtimeService; // Changed from IDigitalVendors
         private readonly ILogger<PurchaseService> _logger;
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
 
         public PurchaseService(
             IUserRepository userRepository,
-            IDigitalVendors digitalVendors,
-            ILogger<PurchaseService> logger,
-            HttpClient httpClient,
-            IConfiguration configuration)
+            AirtimeService airtimeService, // Changed injection
+            ILogger<PurchaseService> logger)
         {
             _userRepository = userRepository;
-            _digitalVendors = digitalVendors;
+            _airtimeService = airtimeService;
             _logger = logger;
-            _httpClient = httpClient;
-            _configuration = configuration;
         }
 
-        public async Task<ResponseModel> PurchaseAirtime(
+        public async Task<ResponseModel> PurchaseAirtimeService(
             PurchaseAirtimeRequestDTO purchaseAirtimeRequestDTO,
-            string username,
-            string token)
+            string username)
         {
             try
             {
@@ -46,7 +39,7 @@ namespace IRecharge_API.BLL
                 }
 
                 // Validate user
-                var user = _userRepository.GetByUserName(username);
+                var user =  _userRepository.GetByUserName(username);
                 if (user == null)
                 {
                     _logger.LogWarning($"User not found: {username}");
@@ -60,52 +53,42 @@ namespace IRecharge_API.BLL
                     return new ResponseModel { IsSuccess = false, Message = "Insufficient balance" };
                 }
 
-                // Deduct balance
-                user.WalletBalance -= purchaseAirtimeRequestDTO.Amount;
-                 _userRepository.UpdateUserAsync(user);
-                _logger.LogDebug($"Deducted {purchaseAirtimeRequestDTO.Amount} from user {username}'s wallet");
-
                 // Prepare vendor request
-                _logger.LogInformation($"Preparing airtime purchase request for user: {username}");
-                var vendAirtimeRequest = new VendAirtimeRequestModel
+                var vendRequest = new VendAirtimeRequestModel
                 {
                     amount = purchaseAirtimeRequestDTO.Amount,
                     number = purchaseAirtimeRequestDTO.PhoneNumber,
                     network = purchaseAirtimeRequestDTO.NetworkType
                 };
 
-                // Add Authorization header to the request
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
+                // Make purchase through AirtimeService
+                var vendorResponse = await _airtimeService.PurchaseAirtime(vendRequest);
 
-                // Make the API call
-                var response = await _httpClient.PostAsJsonAsync(
-                    _configuration["VendorAPI:AirtimeEndpoint"],
-                    vendAirtimeRequest);
-
-                if (!response.IsSuccessStatusCode)
+                if (!vendorResponse.isSuccessful)
                 {
-                    // Refund if failed
-                    user.WalletBalance += purchaseAirtimeRequestDTO.Amount;
-                     _userRepository.UpdateUserAsync(user);
-                    _logger.LogError($"Airtime purchase failed for user: {username}. Status: {response.StatusCode}");
-
+                    _logger.LogError($"Airtime purchase failed: {vendorResponse.responsemessage}");
                     return new ResponseModel
                     {
                         IsSuccess = false,
-                        Message = $"Failed to purchase airtime. Status: {response.StatusCode}"
+                        Message = vendorResponse.responsemessage
                     };
                 }
 
-                // Process successful response
-                var result = await response.Content.ReadFromJsonAsync<ResponseModel>();
+                // Deduct balance only after successful purchase
+                user.WalletBalance -= purchaseAirtimeRequestDTO.Amount;
+                 _userRepository.UpdateUserAsync(user);
 
-                _logger.LogInformation($"Airtime purchase successful for user: {username}");
+                _logger.LogInformation($"Airtime purchase successful. Transaction ID: {vendorResponse.tran_Id}");
+
                 return new ResponseModel
                 {
                     IsSuccess = true,
                     Message = "Airtime purchased successfully",
-                    Data = result
+                    Data = new
+                    {
+                        TransactionId = vendorResponse.tran_Id,
+                        Amount = purchaseAirtimeRequestDTO.Amount
+                    }
                 };
             }
             catch (Exception ex)
@@ -118,6 +101,7 @@ namespace IRecharge_API.BLL
                 };
             }
         }
+
 
         public async Task<ResponseModel> PurchaseData(PurchaseDataRequestDTO purchaseDataRequestDTO)
         {
