@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Net.Http.Headers;
 
 namespace IRecharge_API.ExternalServices
 {
@@ -27,7 +28,7 @@ namespace IRecharge_API.ExternalServices
             var jsonContent = JsonSerializer.Serialize(vendAirtimeRequestModel);
             var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var response = _httpClient.PostAsync(baseurl, httpContent).Result;
 
