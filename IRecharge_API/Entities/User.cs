@@ -13,6 +13,7 @@
         public decimal WalletBalance { get; set; }
 
         public required string PhoneNumber { get; set; }
+
         public DateTime DateCreated { get; set; }
     }
 }
